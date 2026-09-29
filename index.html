@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeployHub — HTML Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="toast"></div>
+<div id="loginView" class="auth-page">
+  <div class="auth-art"><div class="brand"><span class="brand-mark">⌁</span> DeployHub</div><div class="art-copy"><h1>Bangun. Preview.<br><em>Deploy.</em></h1><p>Workspace sederhana untuk menyimpan dan membagikan karya HTML Anda.</p></div><div class="art-grid"></div></div>
+  <div class="auth-panel"><div class="auth-box"><div class="mobile-brand brand"><span class="brand-mark">⌁</span> DeployHub</div><span class="eyebrow">WORKSPACE HTML</span><h2>Selamat datang</h2><p class="sub">Masuk untuk melanjutkan ke workspace Anda.</p><form id="loginForm"><label>Username atau email<input id="loginId" autocomplete="username" required placeholder="nama@email.com"></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••"></label><button class="primary full">Masuk <span>→</span></button></form><div id="loginMsg"></div><p class="switch">Belum punya akun? <button class="text-btn" id="showRegister">Daftar sekarang</button></p></div></div>
+</div>
+
+<div id="registerView" class="auth-page hidden">
+  <div class="auth-art"><div class="brand"><span class="brand-mark">⌁</span> DeployHub</div><div class="art-copy"><h1>Satu tempat untuk<br><em>semua karya.</em></h1><p>Buat akun gratis dan kelola hingga 5 karya HTML Anda.</p></div><div class="art-grid"></div></div>
+  <div class="auth-panel"><div class="auth-box"><div class="mobile-brand brand"><span class="brand-mark">⌁</span> DeployHub</div><span class="eyebrow">BUAT AKUN</span><h2>Mulai sekarang</h2><p class="sub">Pendaftaran akan ditinjau oleh admin.</p><form id="registerForm"><label>Nama<input id="regName" required placeholder="Nama lengkap"></label><div class="two"><label>Username<input id="regUsername" required placeholder="username"></label><label>Email<input id="regEmail" type="email" required placeholder="email@contoh.com"></label></div><label>Password<input id="regPassword" type="password" minlength="6" required placeholder="Minimal 6 karakter"></label><button class="primary full">Ajukan pendaftaran <span>→</span></button></form><div id="registerMsg"></div><p class="switch">Sudah punya akun? <button class="text-btn" id="showLogin">Kembali masuk</button></p></div></div>
+</div>
+
+<section id="dashboardView" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand side-brand"><span class="brand-mark">⌁</span> DeployHub</div>
+    <div class="workspace-label">WORKSPACE</div>
+    <button class="nav active" id="navDashboard">▦ <span>Dashboard</span></button>
+    <button class="nav" id="adminBtn">◈ <span>Admin Panel</span></button>
+    <div class="side-bottom"><div class="user-mini"><div class="avatar" id="avatar">U</div><div><b id="sideName">User</b><small id="sideRole">USER</small></div></div><button class="nav logout" id="logoutBtn">↪ <span>Keluar</span></button></div>
+  </aside>
+  <main class="main">
+    <header class="mobile-head"><div class="brand"><span class="brand-mark">⌁</span> DeployHub</div><button id="mobileLogout">↪</button></header>
+    <div class="main-inner">
+      <div class="page-head"><div><span class="eyebrow">WORKSPACE</span><h1>Dashboard</h1><p>Kelola karya HTML Anda dari satu tempat.</p></div><button class="primary" onclick="newProject(nextSlot())">＋ Karya baru</button></div>
+      <div id="dashMsg"></div>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-icon purple">⌘</div><div><span>Total karya</span><strong><b id="count">0</b><small> / 5</small></strong></div><div class="progress"><i id="progress"></i></div></div>
+        <div class="stat-card"><div class="stat-icon green">↗</div><div><span>Sudah deploy</span><strong id="deployedCount">0</strong></div></div>
+        <div class="stat-card"><div class="stat-icon orange">◷</div><div><span>Terakhir diperbarui</span><strong class="date" id="lastUpdated">—</strong></div></div>
+      </div>
+      <div class="section-head"><div><h2>Karya Anda</h2><p>Hingga 5 karya dapat disimpan di akun Anda.</p></div><span class="limit-pill">5 SLOT</span></div>
+      <div class="project-grid" id="projects"></div>
+    </div>
+  </main>
+</section>
+
+<section id="adminView" class="app hidden">
+  <aside class="sidebar"><div class="brand side-brand"><span class="brand-mark">⌁</span> DeployHub</div><div class="workspace-label">ADMINISTRATION</div><button class="nav" id="backDash">▦ <span>Dashboard</span></button><button class="nav active">◈ <span>Admin Panel</span></button><div class="side-bottom"><button class="nav logout" id="adminLogout">↪ <span>Keluar</span></button></div></aside>
+  <main class="main"><div class="main-inner"><div class="page-head"><div><span class="eyebrow">ADMINISTRATION</span><h1>Admin Panel</h1><p>Kelola akses pengguna dan pendaftaran baru.</p></div></div><div id="adminMsg"></div><div class="admin-grid"><div class="admin-stat"><span>Menunggu ACC</span><strong id="pendingCount">0</strong></div><div class="admin-stat"><span>Total pengguna</span><strong id="userCount">0</strong></div></div><div class="card table-card"><div class="table-head"><div><h2>Pendaftaran baru</h2><p>Pengguna yang membutuhkan persetujuan.</p></div></div><div id="pendingUsers"></div></div><div class="card table-card"><div class="table-head"><div><h2>Semua pengguna</h2><p>Daftar akun yang terdaftar di platform.</p></div></div><div id="allUsers"></div></div></div></main>
+</section>
+
+<div id="editorModal" class="modal hidden">
+  <div class="editor">
+    <div class="editor-top"><div><span class="eyebrow">EDITOR</span><h2 id="editorTitle">Karya 1</h2></div><button class="close" id="closeEditor">×</button></div>
+    <div class="editor-body"><div class="code-side"><label>Judul karya<input id="projectTitle" placeholder="Contoh: Landing Page Saya"></label><div class="code-label"><span>HTML</span><span id="charCount">0 karakter</span></div><textarea id="htmlCode" spellcheck="false" placeholder="Paste kode HTML Anda di sini..."></textarea></div><div class="preview-side"><div class="preview-label"><span>PREVIEW</span><span class="live-dot">● LIVE</span></div><iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe></div></div>
+    <div class="editor-bottom"><div id="deployResult"></div><div class="actions"><button class="secondary" id="saveBtn">Simpan draft</button><button class="secondary" id="previewBtn">Preview</button><button class="primary" id="deployBtn">Deploy karya ↗</button><button class="copy hidden" id="copyBtn">⧉ Copy link</button></div></div>
+  </div>
+</div>
+<script src="config.js"></script><script src="app.js"></script>
+</body></html>
