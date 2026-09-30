@@ -285,6 +285,8 @@ function logout() {
   localStorage.removeItem(
     "deploy_token"
   );
+  localStorage.removeItem("deploy_user");
+  localStorage.removeItem("deploy_projects");
 
   state = {
     user: null,
@@ -359,8 +361,16 @@ if ($("loginForm")) {
         state.user =
           r.user;
 
+        // Login langsung membawa data karya, jadi tidak perlu
+        // menunggu request "me" kedua sebelum dashboard tampil.
+        state.projects = Array.isArray(r.projects) ? r.projects : [];
+        localStorage.setItem("deploy_user", JSON.stringify(state.user));
+        localStorage.setItem("deploy_projects", JSON.stringify(state.projects));
+        renderDashboard();
+        show("dashboardView");
 
-        await loadDashboard();
+        // Sinkronisasi data terbaru dilakukan di belakang layar.
+        loadDashboard(true).catch(() => {});
 
 
       } catch (error) {
@@ -451,7 +461,7 @@ if ($("registerForm")) {
    DASHBOARD
 ========================================================= */
 
-async function loadDashboard() {
+async function loadDashboard(background = false) {
 
   try {
 
@@ -472,6 +482,8 @@ async function loadDashboard() {
         ? r.projects
         : [];
 
+    localStorage.setItem("deploy_user", JSON.stringify(state.user));
+    localStorage.setItem("deploy_projects", JSON.stringify(state.projects));
 
     renderDashboard();
 
@@ -488,21 +500,23 @@ async function loadDashboard() {
     );
 
 
-    localStorage.removeItem(
-      "deploy_token"
-    );
+    if (!background) {
+      localStorage.removeItem(
+        "deploy_token"
+      );
+      localStorage.removeItem("deploy_user");
+      localStorage.removeItem("deploy_projects");
 
+      show(
+        "loginView"
+      );
 
-    show(
-      "loginView"
-    );
-
-
-    msg(
-      $("loginMsg"),
-      error.message,
-      "error"
-    );
+      msg(
+        $("loginMsg"),
+        error.message,
+        "error"
+      );
+    }
   }
 }
 
@@ -1587,16 +1601,18 @@ window.copyDeploy =
 
 
 function deployUrl(id) {
+  // Link deploy langsung ke Apps Script sebagai dokumen HTML,
+  // sehingga tidak perlu memuat shell GitHub Pages terlebih dahulu.
+  if (typeof API_URL !== "undefined" && API_URL) {
+    return API_URL + "?action=publicHtml&deployId=" + encodeURIComponent(id);
+  }
 
   return (
     window.location.origin +
     window.location.pathname +
     "?p=" +
-    encodeURIComponent(
-      id
-    )
+    encodeURIComponent(id)
   );
-
 }
 
 
@@ -1833,6 +1849,9 @@ async function loadAdmin() {
               <th>
                 ROLE
               </th>
+              <th>
+                AKSI
+              </th>
 
             </tr>
 
@@ -1877,6 +1896,15 @@ async function loadAdmin() {
                           x.role
                         )}
 
+                      </td>
+
+                      <td>
+                        ${x.role !== "ADMIN" ? `
+                          <button type="button" class="preview" style="margin-right:6px" onclick="viewUserProjects('${escapeHtml(x.id)}')">Lihat karya</button>
+                          <button type="button" style="border:0;border-radius:8px;padding:8px 10px;background:#ffe9e9;color:#c62828;font-weight:700;cursor:pointer" onclick="deleteUser('${escapeHtml(x.id)}')">Hapus</button>
+                        ` : `
+                          <span style="color:#999;font-size:12px">Akun admin</span>
+                        `}
                       </td>
 
                     </tr>
@@ -1951,6 +1979,75 @@ window.approveUser =
 
   };
 
+
+/* =========================================================
+   ADMIN: LIHAT / HAPUS USER
+========================================================= */
+
+window.viewUserProjects = async userId => {
+  try {
+    msg($('adminMsg'), 'Memuat karya pengguna...');
+    const r = await apiAuth('adminProjects', { userId });
+    const user = r.user || {};
+    const projects = Array.isArray(r.projects) ? r.projects : [];
+    let html = `
+      <div id="adminProjectsOverlay" style="position:fixed;inset:0;background:rgba(15,15,30,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
+        <div style="background:#fff;border-radius:18px;max-width:1000px;width:100%;max-height:90vh;overflow:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+          <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px">
+            <div>
+              <div style="font-size:11px;color:#8a7ac8;font-weight:800;letter-spacing:.08em">KARYA PENGGUNA</div>
+              <h2 style="margin:5px 0 4px">${escapeHtml(user.name || user.username || 'Pengguna')}</h2>
+              <div style="font-size:13px;color:#777">@${escapeHtml(user.username || '')} · ${escapeHtml(user.email || '')}</div>
+            </div>
+            <button type="button" class="close" onclick="document.getElementById('adminProjectsOverlay')?.remove()">×</button>
+          </div>`;
+    if (!projects.length) {
+      html += `<div style="padding:30px;text-align:center;color:#999;border:1px dashed #ddd;border-radius:12px">Pengguna ini belum memiliki karya.</div>`;
+    } else {
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">`;
+      projects.forEach(p => {
+        const liveUrl = p.deployId ? deployUrl(p.deployId) : '';
+        html += `
+          <div style="border:1px solid #eee;border-radius:14px;padding:16px;background:#fafafa">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>Karya ${Number(p.slot) || ''}</b><span style="font-size:11px;font-weight:800">${escapeHtml(p.status || 'DRAFT')}</span></div>
+            <h3 style="font-size:16px;margin:10px 0 6px">${escapeHtml(p.title || 'Tanpa judul')}</h3>
+            <div style="font-size:12px;color:#888;margin-bottom:12px">${p.updatedAt ? new Date(p.updatedAt).toLocaleString('id-ID') : ''}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="preview" onclick="adminPreviewProject('${escapeHtml(p.id)}')">Preview</button>
+              ${liveUrl ? `<a class="preview" href="${escapeHtml(liveUrl)}" target="_blank" rel="noopener">Buka deploy ↗</a>` : ''}
+            </div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    window.__adminProjects = projects;
+    msg($('adminMsg'), '');
+  } catch (error) {
+    console.error('ADMIN PROJECTS ERROR:', error);
+    msg($('adminMsg'), error.message, 'error');
+  }
+};
+
+window.adminPreviewProject = id => {
+  const p = (window.__adminProjects || []).find(x => String(x.id) === String(id));
+  if (!p || !p.html) return alert('Karya tidak ditemukan atau belum memiliki HTML.');
+  openHtmlPreview(p.html, p.title || 'Preview Karya');
+};
+
+window.deleteUser = async userId => {
+  if (!confirm('Hapus akun ini beserta semua karya dan sesi loginnya?\n\nTindakan ini tidak dapat dibatalkan.')) return;
+  try {
+    msg($('adminMsg'), 'Menghapus akun...');
+    await apiAuth('deleteUser', { userId });
+    await loadAdmin();
+    msg($('adminMsg'), 'Akun berhasil dihapus.', 'success');
+  } catch (error) {
+    console.error('DELETE USER ERROR:', error);
+    msg($('adminMsg'), error.message, 'error');
+  }
+};
 
 /* =========================================================
    PUBLIC DEPLOY PAGE
@@ -2061,8 +2158,24 @@ window.approveUser =
    */
 
   if (token()) {
+    let cached = false;
+    try {
+      const cachedUser = JSON.parse(localStorage.getItem("deploy_user") || "null");
+      const cachedProjects = JSON.parse(localStorage.getItem("deploy_projects") || "[]");
+      if (cachedUser) {
+        state.user = cachedUser;
+        state.projects = Array.isArray(cachedProjects) ? cachedProjects : [];
+        renderDashboard();
+        show("dashboardView");
+        cached = true;
+      }
+    } catch (e) {}
 
-    await loadDashboard();
+    if (cached) {
+      loadDashboard(true).catch(() => {});
+    } else {
+      await loadDashboard();
+    }
 
   } else {
 
