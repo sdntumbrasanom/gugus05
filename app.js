@@ -47,23 +47,6 @@ function token() {
    API
 ========================= */
 
-/*
-  GET:
-  - login
-  - register
-  - me
-  - public
-  - adminUsers
-  - approveUser
-
-  POST:
-  - saveProject
-  - deploy
-
-  HTML tidak lagi dimasukkan ke URL.
-  Ini penting untuk HTML yang panjang.
-*/
-
 async function api(action, data = {}) {
 
   if (
@@ -75,6 +58,13 @@ async function api(action, data = {}) {
       "API_URL belum diatur di config.js"
     );
   }
+
+  /*
+   * saveProject dan deploy menggunakan POST
+   * karena HTML bisa sangat panjang.
+   *
+   * Action lainnya tetap menggunakan GET.
+   */
 
   const isPost =
     action === "saveProject" ||
@@ -101,10 +91,12 @@ async function api(action, data = {}) {
 
       response = await fetch(API_URL, {
         method: "POST",
+
         headers: {
           "Content-Type":
             "application/x-www-form-urlencoded;charset=UTF-8"
         },
+
         body: body.toString()
       });
 
@@ -133,7 +125,10 @@ async function api(action, data = {}) {
 
   } catch (error) {
 
-    console.error("API FETCH ERROR:", error);
+    console.error(
+      "API FETCH ERROR:",
+      error
+    );
 
     throw new Error(
       "Gagal terhubung ke server. Periksa koneksi atau API."
@@ -156,7 +151,9 @@ async function api(action, data = {}) {
   let result;
 
   try {
+
     result = await response.json();
+
   } catch (error) {
 
     console.error(
@@ -170,6 +167,7 @@ async function api(action, data = {}) {
   }
 
   if (!result.ok) {
+
     throw new Error(
       result.error ||
       "Terjadi kesalahan pada server."
@@ -192,13 +190,15 @@ async function apiAuth(action, data = {}) {
 ========================= */
 
 if ($("showRegister")) {
-  $("showRegister").onclick = () =>
-    show("registerView");
+
+  $("showRegister").onclick =
+    () => show("registerView");
 }
 
 if ($("showLogin")) {
-  $("showLogin").onclick = () =>
-    show("loginView");
+
+  $("showLogin").onclick =
+    () => show("loginView");
 }
 
 function logout() {
@@ -217,106 +217,130 @@ function logout() {
 }
 
 if ($("logoutBtn")) {
-  $("logoutBtn").onclick = logout;
+
+  $("logoutBtn").onclick =
+    logout;
 }
 
 if ($("adminLogout")) {
-  $("adminLogout").onclick = logout;
+
+  $("adminLogout").onclick =
+    logout;
 }
 
 if ($("mobileLogout")) {
-  $("mobileLogout").onclick = logout;
+
+  $("mobileLogout").onclick =
+    logout;
 }
 
-/* LOGIN */
+/* =========================
+   LOGIN
+========================= */
 
 if ($("loginForm")) {
 
-  $("loginForm").onsubmit = async e => {
+  $("loginForm").onsubmit =
+    async e => {
 
-    e.preventDefault();
-
-    msg(
-      $("loginMsg"),
-      "Memeriksa akun..."
-    );
-
-    try {
-
-      const r = await api("login", {
-        identifier:
-          $("loginId").value,
-        password:
-          $("loginPassword").value
-      });
-
-      localStorage.setItem(
-        "deploy_token",
-        r.token
-      );
-
-      state.user = r.user;
-
-      await loadDashboard();
-
-    } catch (error) {
-
-      console.error(error);
+      e.preventDefault();
 
       msg(
         $("loginMsg"),
-        error.message,
-        "error"
+        "Memeriksa akun..."
       );
-    }
-  };
+
+      try {
+
+        const r =
+          await api(
+            "login",
+            {
+              identifier:
+                $("loginId").value,
+
+              password:
+                $("loginPassword").value
+            }
+          );
+
+        localStorage.setItem(
+          "deploy_token",
+          r.token
+        );
+
+        state.user =
+          r.user;
+
+        await loadDashboard();
+
+      } catch (error) {
+
+        console.error(error);
+
+        msg(
+          $("loginMsg"),
+          error.message,
+          "error"
+        );
+      }
+    };
 }
 
-/* REGISTER */
+/* =========================
+   REGISTER
+========================= */
 
 if ($("registerForm")) {
 
-  $("registerForm").onsubmit = async e => {
+  $("registerForm").onsubmit =
+    async e => {
 
-    e.preventDefault();
-
-    msg(
-      $("registerMsg"),
-      "Mengirim pendaftaran..."
-    );
-
-    try {
-
-      await api("register", {
-        name:
-          $("regName").value,
-        username:
-          $("regUsername").value,
-        email:
-          $("regEmail").value,
-        password:
-          $("regPassword").value
-      });
+      e.preventDefault();
 
       msg(
         $("registerMsg"),
-        "Pendaftaran berhasil. Tunggu persetujuan admin.",
-        "success"
+        "Mengirim pendaftaran..."
       );
 
-      e.target.reset();
+      try {
 
-    } catch (error) {
+        await api(
+          "register",
+          {
+            name:
+              $("regName").value,
 
-      console.error(error);
+            username:
+              $("regUsername").value,
 
-      msg(
-        $("registerMsg"),
-        error.message,
-        "error"
-      );
-    }
-  };
+            email:
+              $("regEmail").value,
+
+            password:
+              $("regPassword").value
+          }
+        );
+
+        msg(
+          $("registerMsg"),
+          "Pendaftaran berhasil. Tunggu persetujuan admin.",
+          "success"
+        );
+
+        e.target.reset();
+
+      } catch (error) {
+
+        console.error(error);
+
+        msg(
+          $("registerMsg"),
+          error.message,
+          "error"
+        );
+      }
+    };
 }
 
 /* =========================
@@ -330,7 +354,9 @@ async function loadDashboard() {
     const r =
       await apiAuth("me");
 
-    state.user = r.user;
+    state.user =
+      r.user;
+
     state.projects =
       Array.isArray(r.projects)
         ? r.projects
@@ -360,11 +386,16 @@ async function loadDashboard() {
 
 function nextSlot() {
 
-  for (let i = 1; i <= 5; i++) {
+  for (
+    let i = 1;
+    i <= 5;
+    i++
+  ) {
 
     if (
       !state.projects.some(
-        x => Number(x.slot) === i
+        x =>
+          Number(x.slot) === i
       )
     ) {
       return i;
@@ -376,38 +407,50 @@ function nextSlot() {
 
 function renderDashboard() {
 
-  const u = state.user;
+  const u =
+    state.user;
 
   if (!u) return;
 
   if ($("hello")) {
+
     $("hello").textContent =
       `Halo, ${u.name}`;
   }
 
   if ($("sideName")) {
+
     $("sideName").textContent =
       u.name || "";
   }
 
   if ($("sideRole")) {
+
     $("sideRole").textContent =
       u.role || "";
   }
 
   if ($("avatar")) {
+
     $("avatar").textContent =
-      (u.name || "U")[0].toUpperCase();
+      (u.name || "U")[0]
+        .toUpperCase();
   }
 
   if ($("count")) {
+
     $("count").textContent =
       state.projects.length;
   }
 
   if ($("progress")) {
+
     $("progress").style.width =
-      (state.projects.length / 5 * 100) + "%";
+      (
+        state.projects.length /
+        5 *
+        100
+      ) + "%";
   }
 
   const deployed =
@@ -418,25 +461,33 @@ function renderDashboard() {
     ).length;
 
   if ($("deployedCount")) {
-    $("deployedCount").textContent =
+
+    $("deployedCount")
+      .textContent =
       deployed;
   }
 
   const latest =
     state.projects
       .map(
-        x => new Date(x.updatedAt)
+        x =>
+          new Date(
+            x.updatedAt
+          )
       )
       .filter(
-        x => !isNaN(x)
+        x =>
+          !isNaN(x)
       )
       .sort(
-        (a, b) => b - a
+        (a, b) =>
+          b - a
       )[0];
 
   if ($("lastUpdated")) {
 
-    $("lastUpdated").textContent =
+    $("lastUpdated")
+      .textContent =
       latest
         ? latest.toLocaleDateString(
             "id-ID",
@@ -458,11 +509,16 @@ function renderDashboard() {
 
   let html = "";
 
-  for (let i = 1; i <= 5; i++) {
+  for (
+    let i = 1;
+    i <= 5;
+    i++
+  ) {
 
     const p =
       state.projects.find(
-        x => Number(x.slot) === i
+        x =>
+          Number(x.slot) === i
       );
 
     if (p) {
@@ -476,7 +532,8 @@ function renderDashboard() {
 
           <div class="project-title">
             ${escapeHtml(
-              p.title || "Tanpa judul"
+              p.title ||
+              "Tanpa judul"
             )}
           </div>
 
@@ -485,14 +542,17 @@ function renderDashboard() {
               ? "live"
               : "draft"
           }">
+
             ${
               p.status === "DEPLOYED"
                 ? "● DEPLOYED"
                 : "DRAFT"
             }
+
           </span>
 
           <div class="project-date">
+
             ${
               p.updatedAt
                 ? new Date(
@@ -507,6 +567,7 @@ function renderDashboard() {
                   )
                 : "Belum diperbarui"
             }
+
           </div>
 
           <div class="project-actions">
@@ -514,13 +575,17 @@ function renderDashboard() {
             <button
               class="edit"
               onclick="editProject(${i})">
+
               Edit
+
             </button>
 
             <button
               class="preview"
               onclick="previewProject(${i})">
+
               Preview
+
             </button>
 
             ${
@@ -529,7 +594,9 @@ function renderDashboard() {
                   <button
                     class="preview"
                     onclick="copyDeploy(${i})">
+
                     ⧉
+
                   </button>
                 `
                 : ""
@@ -549,7 +616,9 @@ function renderDashboard() {
             ＋
           </div>
 
-          <b>Karya ${i}</b>
+          <b>
+            Karya ${i}
+          </b>
 
           <small>
             Slot masih kosong
@@ -567,7 +636,9 @@ function renderDashboard() {
               font-weight:700
             "
             onclick="newProject(${i})">
+
             Buat karya
+
           </button>
 
         </div>
@@ -576,6 +647,7 @@ function renderDashboard() {
   }
 
   if ($("projects")) {
+
     $("projects").innerHTML =
       html;
   }
@@ -585,103 +657,127 @@ function renderDashboard() {
    PROJECT EDITOR
 ========================= */
 
-window.newProject = slot => {
+window.newProject =
+  slot => {
 
-  openEditor({
-    slot,
-    title: "",
-    html: "",
-    deployId: ""
-  });
-};
-
-window.editProject = slot => {
-
-  const p =
-    state.projects.find(
-      x => Number(x.slot) === slot
-    );
-
-  openEditor(
-    p || {
+    openEditor({
       slot,
       title: "",
       html: "",
       deployId: ""
-    }
-  );
-};
+    });
+  };
 
-window.previewProject = slot => {
+window.editProject =
+  slot => {
 
-  const p =
-    state.projects.find(
-      x => Number(x.slot) === slot
+    const p =
+      state.projects.find(
+        x =>
+          Number(x.slot) ===
+          Number(slot)
+      );
+
+    openEditor(
+      p || {
+        slot,
+        title: "",
+        html: "",
+        deployId: ""
+      }
     );
+  };
 
-  openEditor(
-    p || {
-      slot,
-      title: "",
-      html: "",
-      deployId: ""
-    }
-  );
-};
+window.previewProject =
+  slot => {
+
+    const p =
+      state.projects.find(
+        x =>
+          Number(x.slot) ===
+          Number(slot)
+      );
+
+    openEditor(
+      p || {
+        slot,
+        title: "",
+        html: "",
+        deployId: ""
+      }
+    );
+  };
 
 function openEditor(p) {
 
-  state.current = p;
+  state.current =
+    p;
 
   if ($("editorTitle")) {
-    $("editorTitle").textContent =
+
+    $("editorTitle")
+      .textContent =
       `Karya ${p.slot}`;
   }
 
   if ($("projectTitle")) {
-    $("projectTitle").value =
+
+    $("projectTitle")
+      .value =
       p.title || "";
   }
 
   if ($("htmlCode")) {
-    $("htmlCode").value =
+
+    $("htmlCode")
+      .value =
       p.html || "";
   }
 
   if ($("previewFrame")) {
-    $("previewFrame").srcdoc =
+
+    $("previewFrame")
+      .srcdoc =
       p.html || "";
   }
 
   if ($("deployResult")) {
-    $("deployResult").innerHTML =
+
+    $("deployResult")
+      .innerHTML =
       "";
   }
 
   if ($("copyBtn")) {
 
-    $("copyBtn").classList.toggle(
-      "hidden",
-      !p.deployId
-    );
+    $("copyBtn")
+      .classList.toggle(
+        "hidden",
+        !p.deployId
+      );
   }
 
   updateChars();
 
   if ($("editorModal")) {
-    $("editorModal").classList.remove(
-      "hidden"
-    );
+
+    $("editorModal")
+      .classList.remove(
+        "hidden"
+      );
   }
 }
 
 if ($("closeEditor")) {
 
-  $("closeEditor").onclick = () => {
+  $("closeEditor").onclick =
+    () => {
 
-    $("editorModal")
-      .classList.add("hidden");
-  };
+      $("editorModal")
+        .classList.add(
+          "hidden"
+        );
+    };
 }
 
 if ($("htmlCode")) {
@@ -697,24 +793,34 @@ function updateChars() {
     !$("htmlCode")
   ) return;
 
-  $("charCount").textContent =
-    $("htmlCode").value.length
-      .toLocaleString("id-ID") +
+  $("charCount")
+    .textContent =
+    $("htmlCode")
+      .value
+      .length
+      .toLocaleString(
+        "id-ID"
+      ) +
     " karakter";
 }
 
-/* PREVIEW */
+/* =========================
+   PREVIEW
+========================= */
 
 if ($("previewBtn")) {
 
-  $("previewBtn").onclick = () => {
+  $("previewBtn").onclick =
+    () => {
 
-    if ($("previewFrame")) {
+      if ($("previewFrame")) {
 
-      $("previewFrame").srcdoc =
-        $("htmlCode").value;
-    }
-  };
+        $("previewFrame")
+          .srcdoc =
+          $("htmlCode")
+            .value;
+      }
+    };
 }
 
 /* =========================
@@ -731,7 +837,9 @@ if ($("saveBtn")) {
 
       try {
 
-        button.disabled = true;
+        button.disabled =
+          true;
+
         button.textContent =
           "Menyimpan...";
 
@@ -739,18 +847,23 @@ if ($("saveBtn")) {
           state.current;
 
         if (!p) {
+
           throw new Error(
             "Proyek belum dipilih."
           );
         }
 
         const title =
-          $("projectTitle").value.trim();
+          $("projectTitle")
+            .value
+            .trim();
 
         const html =
-          $("htmlCode").value;
+          $("htmlCode")
+            .value;
 
         if (!html.trim()) {
+
           throw new Error(
             "HTML masih kosong."
           );
@@ -760,13 +873,19 @@ if ($("saveBtn")) {
           await apiAuth(
             "saveProject",
             {
-              slot: p.slot,
-              title,
-              html
+              slot:
+                p.slot,
+
+              title:
+                title,
+
+              html:
+                html
             }
           );
 
         if (!r.project) {
+
           throw new Error(
             "Server tidak mengembalikan data proyek."
           );
@@ -781,7 +900,8 @@ if ($("saveBtn")) {
 
         if ($("deployResult")) {
 
-          $("deployResult").innerHTML =
+          $("deployResult")
+            .innerHTML =
             `
             <div class="msg success">
               Draft berhasil disimpan.
@@ -836,7 +956,9 @@ if ($("deployBtn")) {
 
       try {
 
-        button.disabled = true;
+        button.disabled =
+          true;
+
         button.textContent =
           "Deploy...";
 
@@ -844,18 +966,23 @@ if ($("deployBtn")) {
           state.current;
 
         if (!p) {
+
           throw new Error(
             "Proyek belum dipilih."
           );
         }
 
         const title =
-          $("projectTitle").value.trim();
+          $("projectTitle")
+            .value
+            .trim();
 
         const html =
-          $("htmlCode").value;
+          $("htmlCode")
+            .value;
 
         if (!html.trim()) {
+
           throw new Error(
             "HTML masih kosong."
           );
@@ -865,13 +992,19 @@ if ($("deployBtn")) {
           await apiAuth(
             "deploy",
             {
-              slot: p.slot,
-              title,
-              html
+              slot:
+                p.slot,
+
+              title:
+                title,
+
+              html:
+                html
             }
           );
 
         if (!r.project) {
+
           throw new Error(
             "Server tidak mengembalikan data proyek."
           );
@@ -894,18 +1027,24 @@ if ($("deployBtn")) {
 
         if ($("deployResult")) {
 
-          $("deployResult").innerHTML =
+          $("deployResult")
+            .innerHTML =
             `
             <div class="msg success">
+
               Live:
+
               <a
                 href="${escapeHtml(
                   r.url || ""
                 )}"
                 target="_blank"
                 rel="noopener">
+
                 Buka hasil deploy ↗
+
               </a>
+
             </div>
             `;
         }
@@ -956,39 +1095,40 @@ function replaceProject(p) {
    COPY DEPLOY LINK
 ========================= */
 
-window.copyDeploy = async slot => {
+window.copyDeploy =
+  async slot => {
 
-  const p =
-    state.projects.find(
-      x =>
-        Number(x.slot) ===
-        Number(slot)
-    );
+    const p =
+      state.projects.find(
+        x =>
+          Number(x.slot) ===
+          Number(slot)
+      );
 
-  if (!p?.deployId) return;
+    if (!p?.deployId) return;
 
-  const url =
-    deployUrl(
-      p.deployId
-    );
+    const url =
+      deployUrl(
+        p.deployId
+      );
 
-  try {
+    try {
 
-    await navigator.clipboard
-      .writeText(url);
+      await navigator.clipboard
+        .writeText(url);
 
-    alert(
-      "Link deploy berhasil disalin"
-    );
+      alert(
+        "Link deploy berhasil disalin"
+      );
 
-  } catch (error) {
+    } catch (error) {
 
-    prompt(
-      "Salin link:",
-      url
-    );
-  }
-};
+      prompt(
+        "Salin link:",
+        url
+      );
+    }
+  };
 
 function deployUrl(id) {
 
@@ -1002,42 +1142,48 @@ function deployUrl(id) {
 
 if ($("copyBtn")) {
 
-  $("copyBtn").onclick = () => {
+  $("copyBtn").onclick =
+    () => {
 
-    const p =
-      state.current;
+      const p =
+        state.current;
 
-    if (!p?.deployId) return;
+      if (!p?.deployId)
+        return;
 
-    navigator.clipboard
-      .writeText(
-        deployUrl(
-          p.deployId
-        )
-      )
-      .then(() => {
-
-        if ($("deployResult")) {
-
-          $("deployResult").innerHTML =
-            `
-            <div class="msg success">
-              Link disalin.
-            </div>
-            `;
-        }
-
-      })
-      .catch(() => {
-
-        prompt(
-          "Salin link:",
+      navigator.clipboard
+        .writeText(
           deployUrl(
             p.deployId
           )
+        )
+        .then(
+          () => {
+
+            if ($("deployResult")) {
+
+              $("deployResult")
+                .innerHTML =
+                `
+                <div class="msg success">
+                  Link disalin.
+                </div>
+                `;
+            }
+          }
+        )
+        .catch(
+          () => {
+
+            prompt(
+              "Salin link:",
+              deployUrl(
+                p.deployId
+              )
+            );
+          }
         );
-      });
-  };
+    };
 }
 
 /* =========================
@@ -1045,14 +1191,16 @@ if ($("copyBtn")) {
 ========================= */
 
 if ($("adminBtn")) {
+
   $("adminBtn").onclick =
     loadAdmin;
 }
 
 if ($("backDash")) {
 
-  $("backDash").onclick = () =>
-    show("dashboardView");
+  $("backDash").onclick =
+    () =>
+      show("dashboardView");
 }
 
 async function loadAdmin() {
@@ -1077,12 +1225,14 @@ async function loadAdmin() {
       );
 
     if ($("pendingCount")) {
+
       $("pendingCount")
         .textContent =
         pending.length;
     }
 
     if ($("userCount")) {
+
       $("userCount")
         .textContent =
         users.length;
@@ -1092,28 +1242,45 @@ async function loadAdmin() {
 
       $("pendingUsers")
         .innerHTML =
-        pending.map(x => `
-          <div class="user-row">
+        pending
+          .map(
+            x =>
+              `
+              <div class="user-row">
 
-            <div>
-              <b>
-                ${escapeHtml(x.name)}
-              </b>
+                <div>
 
-              <small>
-                ${escapeHtml(x.username)}
-                ·
-                ${escapeHtml(x.email)}
-              </small>
-            </div>
+                  <b>
+                    ${escapeHtml(
+                      x.name
+                    )}
+                  </b>
 
-            <button
-              onclick="approveUser('${escapeHtml(x.id)}')">
-              ✓ ACC
-            </button>
+                  <small>
+                    ${escapeHtml(
+                      x.username
+                    )}
+                    ·
+                    ${escapeHtml(
+                      x.email
+                    )}
+                  </small>
 
-          </div>
-        `).join("") ||
+                </div>
+
+                <button
+                  onclick="approveUser('${escapeHtml(
+                    x.id
+                  )}')">
+
+                  ✓ ACC
+
+                </button>
+
+              </div>
+              `
+          )
+          .join("") ||
 
         `
         <div
@@ -1122,59 +1289,82 @@ async function loadAdmin() {
             color:#999;
             font-size:12px
           ">
+
           Tidak ada pendaftaran
           yang menunggu.
+
         </div>
         `;
     }
 
     if ($("allUsers")) {
 
-      $("allUsers").innerHTML =
+      $("allUsers")
+        .innerHTML =
         `
         <div class="table-wrap">
+
           <table class="table">
 
             <tr>
-              <th>USERNAME</th>
-              <th>NAMA</th>
-              <th>STATUS</th>
-              <th>ROLE</th>
+
+              <th>
+                USERNAME
+              </th>
+
+              <th>
+                NAMA
+              </th>
+
+              <th>
+                STATUS
+              </th>
+
+              <th>
+                ROLE
+              </th>
+
             </tr>
 
             ${
-              users.map(x => `
-                <tr>
+              users
+                .map(
+                  x =>
+                    `
+                    <tr>
 
-                  <td>
-                    ${escapeHtml(
-                      x.username
-                    )}
-                  </td>
+                      <td>
+                        ${escapeHtml(
+                          x.username
+                        )}
+                      </td>
 
-                  <td>
-                    ${escapeHtml(
-                      x.name
-                    )}
-                  </td>
+                      <td>
+                        ${escapeHtml(
+                          x.name
+                        )}
+                      </td>
 
-                  <td>
-                    ${escapeHtml(
-                      x.status
-                    )}
-                  </td>
+                      <td>
+                        ${escapeHtml(
+                          x.status
+                        )}
+                      </td>
 
-                  <td>
-                    ${escapeHtml(
-                      x.role
-                    )}
-                  </td>
+                      <td>
+                        ${escapeHtml(
+                          x.role
+                        )}
+                      </td>
 
-                </tr>
-              `).join("")
+                    </tr>
+                    `
+                )
+                .join("")
             }
 
           </table>
+
         </div>
         `;
     }
@@ -1204,7 +1394,8 @@ window.approveUser =
       await apiAuth(
         "approveUser",
         {
-          userId: id
+          userId:
+            id
         }
       );
 
@@ -1251,21 +1442,30 @@ window.approveUser =
 
       /*
        * PENTING:
+       *
        * Jangan menggunakan:
        *
        * document.body.innerHTML = r.html;
        *
-       * karena r.html dapat berupa dokumen
-       * HTML lengkap yang memiliki DOCTYPE,
-       * html, head, style, script, dan body.
+       * karena HTML game dapat memiliki:
        *
-       * document.open/write/close membuat
-       * browser memuat dokumen tersebut
-       * sebagai halaman HTML utuh.
+       * <!DOCTYPE html>
+       * <html>
+       * <head>
+       * <style>
+       * <script>
+       * dan <body>
+       *
+       * Kita memuatnya sebagai dokumen HTML
+       * lengkap.
        */
 
       document.open();
-      document.write(r.html);
+
+      document.write(
+        r.html
+      );
+
       document.close();
 
       return;
@@ -1277,7 +1477,8 @@ window.approveUser =
         error
       );
 
-      document.body.innerHTML = `
+      document.body.innerHTML =
+        `
         <div
           style="
             font-family:Arial;
@@ -1295,7 +1496,7 @@ window.approveUser =
           </p>
 
         </div>
-      `;
+        `;
 
       return;
     }
