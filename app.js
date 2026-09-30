@@ -688,26 +688,41 @@ window.editProject =
     );
   };
 
-window.previewProject =
-  slot => {
+window.previewProject = slot => {
 
-    const p =
-      state.projects.find(
-        x =>
-          Number(x.slot) ===
-          Number(slot)
+  const p = state.projects.find(
+    x => Number(x.slot) === Number(slot)
+  );
+
+  if (!p) {
+    alert("Karya belum tersedia.");
+    return;
+  }
+
+  if (!p.html || !p.html.trim()) {
+    alert("Karya ini belum memiliki kode HTML.");
+    return;
+  }
+
+  // Buka editor
+  openEditor(p);
+
+  // Tampilkan HTML ke iframe preview
+  setTimeout(() => {
+
+    const frame = $("previewFrame");
+
+    if (!frame) {
+      console.error(
+        "Elemen previewFrame tidak ditemukan."
       );
+      return;
+    }
 
-    openEditor(
-      p || {
-        slot,
-        title: "",
-        html: "",
-        deployId: ""
-      }
-    );
-  };
+    frame.srcdoc = p.html;
 
+  }, 100);
+};
 function openEditor(p) {
 
   state.current =
@@ -810,19 +825,26 @@ function updateChars() {
 
 if ($("previewBtn")) {
 
-  $("previewBtn").onclick =
-    () => {
+  $("previewBtn").onclick = () => {
 
-      if ($("previewFrame")) {
+    const frame = $("previewFrame");
 
-        $("previewFrame")
-          .srcdoc =
-          $("htmlCode")
-            .value;
-      }
-    };
+    if (!frame) {
+      alert("Area preview tidak ditemukan.");
+      return;
+    }
+
+    const html =
+      $("htmlCode").value;
+
+    if (!html.trim()) {
+      alert("Kode HTML masih kosong.");
+      return;
+    }
+
+    frame.srcdoc = html;
+  };
 }
-
 /* =========================
    SAVE PROJECT
 ========================= */
