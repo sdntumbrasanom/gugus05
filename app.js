@@ -692,8 +692,10 @@ if ($("htmlCode")) {
 
 function updateChars() {
 
-  if (!$("charCount") ||
-      !$("htmlCode")) return;
+  if (
+    !$("charCount") ||
+    !$("htmlCode")
+  ) return;
 
   $("charCount").textContent =
     $("htmlCode").value.length
@@ -1247,12 +1249,24 @@ window.approveUser =
           }
         );
 
-      document.body.innerHTML =
-        r.html;
+      /*
+       * PENTING:
+       * Jangan menggunakan:
+       *
+       * document.body.innerHTML = r.html;
+       *
+       * karena r.html dapat berupa dokumen
+       * HTML lengkap yang memiliki DOCTYPE,
+       * html, head, style, script, dan body.
+       *
+       * document.open/write/close membuat
+       * browser memuat dokumen tersebut
+       * sebagai halaman HTML utuh.
+       */
 
-      document.title =
-        r.title ||
-        "HTML Deploy";
+      document.open();
+      document.write(r.html);
+      document.close();
 
       return;
 
