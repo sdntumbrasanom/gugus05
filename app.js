@@ -6,9 +6,10 @@ let state = {
   current: null
 };
 
-/* =========================
+
+/* =========================================================
    UTILITIES
-========================= */
+========================================================= */
 
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
@@ -20,18 +21,34 @@ function escapeHtml(s) {
   }[c]));
 }
 
+
 function show(id) {
-  ["loginView", "registerView", "dashboardView", "adminView"]
-    .forEach(x => {
-      const el = $(x);
-      if (el) el.classList.add("hidden");
-    });
+
+  [
+    "loginView",
+    "registerView",
+    "dashboardView",
+    "adminView"
+  ].forEach(x => {
+
+    const el = $(x);
+
+    if (el) {
+      el.classList.add("hidden");
+    }
+
+  });
 
   const target = $(id);
-  if (target) target.classList.remove("hidden");
+
+  if (target) {
+    target.classList.remove("hidden");
+  }
 }
 
+
 function msg(el, text, type = "") {
+
   if (!el) return;
 
   el.innerHTML = text
@@ -39,13 +56,20 @@ function msg(el, text, type = "") {
     : "";
 }
 
+
 function token() {
-  return localStorage.getItem("deploy_token") || "";
+
+  return (
+    localStorage.getItem(
+      "deploy_token"
+    ) || ""
+  );
 }
 
-/* =========================
+
+/* =========================================================
    API
-========================= */
+========================================================= */
 
 async function api(action, data = {}) {
 
@@ -54,74 +78,109 @@ async function api(action, data = {}) {
     !API_URL ||
     API_URL.includes("PASTE_")
   ) {
+
     throw new Error(
       "API_URL belum diatur di config.js"
     );
   }
 
+
   /*
    * saveProject dan deploy menggunakan POST
-   * karena HTML bisa sangat panjang.
+   * karena isi HTML bisa sangat panjang.
    *
-   * Action lainnya tetap menggunakan GET.
+   * Action lain menggunakan GET.
    */
 
   const isPost =
     action === "saveProject" ||
     action === "deploy";
 
+
   let response;
+
 
   try {
 
     if (isPost) {
 
-      const body = new URLSearchParams();
+      const body =
+        new URLSearchParams();
 
-      body.append("action", action);
+      body.append(
+        "action",
+        action
+      );
 
-      Object.entries(data).forEach(([key, value]) => {
-        body.append(
-          key,
-          value === undefined || value === null
-            ? ""
-            : String(value)
+
+      Object.entries(data)
+        .forEach(([key, value]) => {
+
+          body.append(
+            key,
+            value === undefined ||
+            value === null
+              ? ""
+              : String(value)
+          );
+
+        });
+
+
+      response =
+        await fetch(
+          API_URL,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/x-www-form-urlencoded;charset=UTF-8"
+            },
+
+            body:
+              body.toString()
+          }
         );
-      });
 
-      response = await fetch(API_URL, {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/x-www-form-urlencoded;charset=UTF-8"
-        },
-
-        body: body.toString()
-      });
 
     } else {
 
-      const params = new URLSearchParams();
+      const params =
+        new URLSearchParams();
 
-      params.append("action", action);
-
-      Object.entries(data).forEach(([key, value]) => {
-        params.append(
-          key,
-          value === undefined || value === null
-            ? ""
-            : String(value)
-        );
-      });
-
-      response = await fetch(
-        API_URL + "?" + params.toString(),
-        {
-          method: "GET"
-        }
+      params.append(
+        "action",
+        action
       );
+
+
+      Object.entries(data)
+        .forEach(([key, value]) => {
+
+          params.append(
+            key,
+            value === undefined ||
+            value === null
+              ? ""
+              : String(value)
+          );
+
+        });
+
+
+      response =
+        await fetch(
+          API_URL +
+          "?" +
+          params.toString(),
+          {
+            method: "GET"
+          }
+        );
+
     }
+
 
   } catch (error) {
 
@@ -134,6 +193,7 @@ async function api(action, data = {}) {
       "Gagal terhubung ke server. Periksa koneksi atau API."
     );
   }
+
 
   if (!response.ok) {
 
@@ -148,11 +208,14 @@ async function api(action, data = {}) {
     );
   }
 
+
   let result;
+
 
   try {
 
-    result = await response.json();
+    result =
+      await response.json();
 
   } catch (error) {
 
@@ -166,6 +229,7 @@ async function api(action, data = {}) {
     );
   }
 
+
   if (!result.ok) {
 
     throw new Error(
@@ -174,32 +238,47 @@ async function api(action, data = {}) {
     );
   }
 
+
   return result;
 }
 
-async function apiAuth(action, data = {}) {
 
-  return api(action, {
-    ...data,
-    token: token()
-  });
+async function apiAuth(
+  action,
+  data = {}
+) {
+
+  return api(
+    action,
+    {
+      ...data,
+      token: token()
+    }
+  );
 }
 
-/* =========================
+
+/* =========================================================
    LOGIN / REGISTER
-========================= */
+========================================================= */
 
 if ($("showRegister")) {
 
   $("showRegister").onclick =
-    () => show("registerView");
+    () => show(
+      "registerView"
+    );
 }
+
 
 if ($("showLogin")) {
 
   $("showLogin").onclick =
-    () => show("loginView");
+    () => show(
+      "loginView"
+    );
 }
+
 
 function logout() {
 
@@ -216,11 +295,13 @@ function logout() {
   show("loginView");
 }
 
+
 if ($("logoutBtn")) {
 
   $("logoutBtn").onclick =
     logout;
 }
+
 
 if ($("adminLogout")) {
 
@@ -228,15 +309,17 @@ if ($("adminLogout")) {
     logout;
 }
 
+
 if ($("mobileLogout")) {
 
   $("mobileLogout").onclick =
     logout;
 }
 
-/* =========================
+
+/* =========================================================
    LOGIN
-========================= */
+========================================================= */
 
 if ($("loginForm")) {
 
@@ -245,10 +328,12 @@ if ($("loginForm")) {
 
       e.preventDefault();
 
+
       msg(
         $("loginMsg"),
         "Memeriksa akun..."
       );
+
 
       try {
 
@@ -264,19 +349,26 @@ if ($("loginForm")) {
             }
           );
 
+
         localStorage.setItem(
           "deploy_token",
           r.token
         );
 
+
         state.user =
           r.user;
 
+
         await loadDashboard();
+
 
       } catch (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
+
 
         msg(
           $("loginMsg"),
@@ -284,12 +376,14 @@ if ($("loginForm")) {
           "error"
         );
       }
+
     };
 }
 
-/* =========================
+
+/* =========================================================
    REGISTER
-========================= */
+========================================================= */
 
 if ($("registerForm")) {
 
@@ -298,10 +392,12 @@ if ($("registerForm")) {
 
       e.preventDefault();
 
+
       msg(
         $("registerMsg"),
         "Mengirim pendaftaran..."
       );
+
 
       try {
 
@@ -322,17 +418,23 @@ if ($("registerForm")) {
           }
         );
 
+
         msg(
           $("registerMsg"),
           "Pendaftaran berhasil. Tunggu persetujuan admin.",
           "success"
         );
 
+
         e.target.reset();
+
 
       } catch (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
+
 
         msg(
           $("registerMsg"),
@@ -340,41 +442,61 @@ if ($("registerForm")) {
           "error"
         );
       }
+
     };
 }
 
-/* =========================
+
+/* =========================================================
    DASHBOARD
-========================= */
+========================================================= */
 
 async function loadDashboard() {
 
   try {
 
     const r =
-      await apiAuth("me");
+      await apiAuth(
+        "me"
+      );
+
 
     state.user =
       r.user;
 
+
     state.projects =
-      Array.isArray(r.projects)
+      Array.isArray(
+        r.projects
+      )
         ? r.projects
         : [];
 
+
     renderDashboard();
 
-    show("dashboardView");
+
+    show(
+      "dashboardView"
+    );
+
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     localStorage.removeItem(
       "deploy_token"
     );
 
-    show("loginView");
+
+    show(
+      "loginView"
+    );
+
 
     msg(
       $("loginMsg"),
@@ -383,6 +505,7 @@ async function loadDashboard() {
     );
   }
 }
+
 
 function nextSlot() {
 
@@ -398,19 +521,29 @@ function nextSlot() {
           Number(x.slot) === i
       )
     ) {
+
       return i;
     }
+
   }
+
 
   return 1;
 }
+
+
+/* =========================================================
+   RENDER DASHBOARD
+========================================================= */
 
 function renderDashboard() {
 
   const u =
     state.user;
 
+
   if (!u) return;
+
 
   if ($("hello")) {
 
@@ -418,11 +551,13 @@ function renderDashboard() {
       `Halo, ${u.name}`;
   }
 
+
   if ($("sideName")) {
 
     $("sideName").textContent =
       u.name || "";
   }
+
 
   if ($("sideRole")) {
 
@@ -430,18 +565,23 @@ function renderDashboard() {
       u.role || "";
   }
 
+
   if ($("avatar")) {
 
     $("avatar").textContent =
-      (u.name || "U")[0]
-        .toUpperCase();
+      (
+        u.name ||
+        "U"
+      )[0].toUpperCase();
   }
+
 
   if ($("count")) {
 
     $("count").textContent =
       state.projects.length;
   }
+
 
   if ($("progress")) {
 
@@ -453,19 +593,22 @@ function renderDashboard() {
       ) + "%";
   }
 
+
   const deployed =
     state.projects.filter(
       x =>
         x.deployId &&
-        x.status === "DEPLOYED"
+        x.status ===
+        "DEPLOYED"
     ).length;
+
 
   if ($("deployedCount")) {
 
-    $("deployedCount")
-      .textContent =
+    $("deployedCount").textContent =
       deployed;
   }
+
 
   const latest =
     state.projects
@@ -484,10 +627,10 @@ function renderDashboard() {
           b - a
       )[0];
 
+
   if ($("lastUpdated")) {
 
-    $("lastUpdated")
-      .textContent =
+    $("lastUpdated").textContent =
       latest
         ? latest.toLocaleDateString(
             "id-ID",
@@ -499,6 +642,7 @@ function renderDashboard() {
         : "—";
   }
 
+
   if ($("adminBtn")) {
 
     $("adminBtn").style.display =
@@ -507,7 +651,9 @@ function renderDashboard() {
         : "none";
   }
 
+
   let html = "";
+
 
   for (
     let i = 1;
@@ -521,14 +667,17 @@ function renderDashboard() {
           Number(x.slot) === i
       );
 
+
     if (p) {
 
       html += `
+
         <div class="project-card">
 
           <span class="project-num">
             KARYA ${i}
           </span>
+
 
           <div class="project-title">
             ${escapeHtml(
@@ -537,19 +686,23 @@ function renderDashboard() {
             )}
           </div>
 
+
           <span class="status ${
-            p.status === "DEPLOYED"
+            p.status ===
+            "DEPLOYED"
               ? "live"
               : "draft"
           }">
 
             ${
-              p.status === "DEPLOYED"
+              p.status ===
+              "DEPLOYED"
                 ? "● DEPLOYED"
                 : "DRAFT"
             }
 
           </span>
+
 
           <div class="project-date">
 
@@ -560,9 +713,12 @@ function renderDashboard() {
                   ).toLocaleDateString(
                     "id-ID",
                     {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric"
+                      day:
+                        "numeric",
+                      month:
+                        "long",
+                      year:
+                        "numeric"
                     }
                   )
                 : "Belum diperbarui"
@@ -570,9 +726,12 @@ function renderDashboard() {
 
           </div>
 
+
           <div class="project-actions">
 
+
             <button
+              type="button"
               class="edit"
               onclick="editProject(${i})">
 
@@ -580,51 +739,66 @@ function renderDashboard() {
 
             </button>
 
+
             <button
-  type="button"
-  class="preview"
-  data-preview-slot="${i}">
+              type="button"
+              class="preview"
+              onclick="previewProject(${i})">
 
-  Preview
+              Preview
 
-</button>
+            </button>
+
+
             ${
               p.deployId
                 ? `
+
                   <button
+                    type="button"
                     class="preview"
                     onclick="copyDeploy(${i})">
 
                     ⧉
 
                   </button>
+
                 `
                 : ""
             }
 
+
           </div>
 
         </div>
+
       `;
+
 
     } else {
 
+
       html += `
+
         <div class="project-card empty">
 
           <div class="plus-circle">
             ＋
           </div>
 
+
           <b>
             Karya ${i}
           </b>
+
 
           <small>
             Slot masih kosong
           </small>
 
+
           <button
+            type="button"
             class="edit"
             style="
               margin-top:12px;
@@ -641,10 +815,15 @@ function renderDashboard() {
 
           </button>
 
+
         </div>
+
       `;
+
     }
+
   }
+
 
   if ($("projects")) {
 
@@ -653,20 +832,25 @@ function renderDashboard() {
   }
 }
 
-/* =========================
+
+/* =========================================================
    PROJECT EDITOR
-========================= */
+========================================================= */
 
 window.newProject =
   slot => {
 
-    openEditor({
-      slot,
-      title: "",
-      html: "",
-      deployId: ""
-    });
+    openEditor(
+      {
+        slot,
+        title: "",
+        html: "",
+        deployId: ""
+      }
+    );
+
   };
+
 
 window.editProject =
   slot => {
@@ -678,6 +862,7 @@ window.editProject =
           Number(slot)
       );
 
+
     openEditor(
       p || {
         slot,
@@ -686,93 +871,251 @@ window.editProject =
         deployId: ""
       }
     );
+
   };
 
-window.previewProject = slot => {
 
-  const p = state.projects.find(
-    x => Number(x.slot) === Number(slot)
-  );
+/* =========================================================
+   PREVIEW KARYA
+   VERSI BARU
+========================================================= */
 
-  if (!p) {
-    alert("Karya belum tersedia.");
-    return;
-  }
+window.previewProject =
+  slot => {
 
-  if (!p.html || !p.html.trim()) {
-    alert("Karya ini belum memiliki kode HTML.");
-    return;
-  }
-
-  // Buka editor
-  openEditor(p);
-
-  // Tampilkan HTML ke iframe preview
-  setTimeout(() => {
-
-    const frame = $("previewFrame");
-
-    if (!frame) {
-      console.error(
-        "Elemen previewFrame tidak ditemukan."
+    const p =
+      state.projects.find(
+        x =>
+          Number(x.slot) ===
+          Number(slot)
       );
+
+
+    if (!p) {
+
+      alert(
+        "Karya tidak ditemukan."
+      );
+
       return;
     }
 
-    frame.srcdoc = p.html;
 
-  }, 100);
+    if (
+      !p.html ||
+      !p.html.trim()
+    ) {
+
+      alert(
+        "Karya ini belum memiliki kode HTML."
+      );
+
+      return;
+    }
+
+
+    openHtmlPreview(
+      p.html,
+      p.title ||
+      "Preview Karya"
+    );
+
+  };
+
+
+/* =========================================================
+   MEMBUKA HTML PREVIEW
+========================================================= */
+
+function openHtmlPreview(
+  html,
+  title
+) {
+
+  try {
+
+    /*
+     * Blob digunakan agar HTML dibuka
+     * sebagai dokumen HTML sungguhan.
+     *
+     * Ini lebih cocok untuk game yang
+     * memiliki CSS dan JavaScript.
+     */
+
+    const blob =
+      new Blob(
+        [html],
+        {
+          type:
+            "text/html;charset=utf-8"
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+
+    const previewWindow =
+      window.open(
+        url,
+        "_blank"
+      );
+
+
+    /*
+     * Jika popup diblokir browser,
+     * gunakan link alternatif.
+     */
+
+    if (!previewWindow) {
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+
+      link.href =
+        url;
+
+
+      link.target =
+        "_blank";
+
+
+      link.rel =
+        "noopener";
+
+
+      document.body.appendChild(
+        link
+      );
+
+
+      link.click();
+
+
+      link.remove();
+
+
+      return;
+    }
+
+
+    /*
+     * Tidak langsung revoke URL.
+     * Browser memerlukan waktu untuk
+     * memuat HTML dan resource-nya.
+     */
+
+    setTimeout(
+      () => {
+
+        try {
+
+          previewWindow.document.title =
+            title ||
+            "Preview Karya";
+
+        } catch (e) {
+
+          /*
+           * Tidak masalah jika
+           * browser membatasi akses
+           * antar-window.
+           */
+
+        }
+
+      },
+      500
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "PREVIEW ERROR:",
+      error
+    );
+
+
+    alert(
+      "Preview gagal dibuka: " +
+      error.message
+    );
+
+  }
+
 };
+
+
+/* =========================================================
+   OPEN EDITOR
+========================================================= */
+
 function openEditor(p) {
 
   state.current =
     p;
 
+
   if ($("editorTitle")) {
 
-    $("editorTitle")
-      .textContent =
+    $("editorTitle").textContent =
       `Karya ${p.slot}`;
   }
 
+
   if ($("projectTitle")) {
 
-    $("projectTitle")
-      .value =
+    $("projectTitle").value =
       p.title || "";
   }
 
+
   if ($("htmlCode")) {
 
-    $("htmlCode")
-      .value =
+    $("htmlCode").value =
       p.html || "";
   }
+
+
+  /*
+   * Tetap isi iframe jika tersedia.
+   * Ini membuat tombol Preview di editor
+   * tetap bisa bekerja jika layout lama
+   * memiliki iframe preview.
+   */
 
   if ($("previewFrame")) {
 
-    $("previewFrame")
-      .srcdoc =
+    $("previewFrame").srcdoc =
       p.html || "";
   }
 
+
   if ($("deployResult")) {
 
-    $("deployResult")
-      .innerHTML =
+    $("deployResult").innerHTML =
       "";
   }
 
+
   if ($("copyBtn")) {
 
-    $("copyBtn")
-      .classList.toggle(
-        "hidden",
-        !p.deployId
-      );
+    $("copyBtn").classList.toggle(
+      "hidden",
+      !p.deployId
+    );
   }
 
+
   updateChars();
+
 
   if ($("editorModal")) {
 
@@ -781,19 +1124,34 @@ function openEditor(p) {
         "hidden"
       );
   }
+
 }
+
+
+/* =========================================================
+   CLOSE EDITOR
+========================================================= */
 
 if ($("closeEditor")) {
 
   $("closeEditor").onclick =
     () => {
 
-      $("editorModal")
-        .classList.add(
-          "hidden"
-        );
+      if ($("editorModal")) {
+
+        $("editorModal")
+          .classList.add(
+            "hidden"
+          );
+      }
+
     };
 }
+
+
+/* =========================================================
+   HTML INPUT
+========================================================= */
 
 if ($("htmlCode")) {
 
@@ -801,17 +1159,20 @@ if ($("htmlCode")) {
     updateChars;
 }
 
+
 function updateChars() {
 
   if (
     !$("charCount") ||
     !$("htmlCode")
-  ) return;
+  ) {
 
-  $("charCount")
-    .textContent =
-    $("htmlCode")
-      .value
+    return;
+  }
+
+
+  $("charCount").textContent =
+    $("htmlCode").value
       .length
       .toLocaleString(
         "id-ID"
@@ -819,35 +1180,46 @@ function updateChars() {
     " karakter";
 }
 
-/* =========================
-   PREVIEW
-========================= */
+
+/* =========================================================
+   PREVIEW DARI EDITOR
+========================================================= */
 
 if ($("previewBtn")) {
 
-  $("previewBtn").onclick = () => {
+  $("previewBtn").onclick =
+    () => {
 
-    const frame = $("previewFrame");
+      const html =
+        $("htmlCode")
+          ? $("htmlCode").value
+          : "";
 
-    if (!frame) {
-      alert("Area preview tidak ditemukan.");
-      return;
-    }
 
-    const html =
-      $("htmlCode").value;
+      if (!html.trim()) {
 
-    if (!html.trim()) {
-      alert("Kode HTML masih kosong.");
-      return;
-    }
+        alert(
+          "Kode HTML masih kosong."
+        );
 
-    frame.srcdoc = html;
-  };
+        return;
+      }
+
+
+      openHtmlPreview(
+        html,
+        $("projectTitle")
+          ? $("projectTitle").value
+          : "Preview Karya"
+      );
+
+    };
 }
-/* =========================
+
+
+/* =========================================================
    SAVE PROJECT
-========================= */
+========================================================= */
 
 if ($("saveBtn")) {
 
@@ -857,16 +1229,20 @@ if ($("saveBtn")) {
       const button =
         $("saveBtn");
 
+
       try {
 
         button.disabled =
           true;
 
+
         button.textContent =
           "Menyimpan...";
 
+
         const p =
           state.current;
+
 
         if (!p) {
 
@@ -875,14 +1251,17 @@ if ($("saveBtn")) {
           );
         }
 
+
         const title =
           $("projectTitle")
             .value
             .trim();
 
+
         const html =
           $("htmlCode")
             .value;
+
 
         if (!html.trim()) {
 
@@ -890,6 +1269,7 @@ if ($("saveBtn")) {
             "HTML masih kosong."
           );
         }
+
 
         const r =
           await apiAuth(
@@ -906,6 +1286,7 @@ if ($("saveBtn")) {
             }
           );
 
+
         if (!r.project) {
 
           throw new Error(
@@ -913,23 +1294,30 @@ if ($("saveBtn")) {
           );
         }
 
+
         replaceProject(
           r.project
         );
 
+
         state.current =
           r.project;
 
+
         if ($("deployResult")) {
 
-          $("deployResult")
-            .innerHTML =
+          $("deployResult").innerHTML =
             `
-            <div class="msg success">
-              Draft berhasil disimpan.
-            </div>
+
+              <div class="msg success">
+
+                Draft berhasil disimpan.
+
+              </div>
+
             `;
         }
+
 
         if ($("copyBtn")) {
 
@@ -940,6 +1328,7 @@ if ($("saveBtn")) {
             );
         }
 
+
       } catch (error) {
 
         console.error(
@@ -947,26 +1336,32 @@ if ($("saveBtn")) {
           error
         );
 
+
         msg(
           $("deployResult"),
           error.message,
           "error"
         );
 
+
       } finally {
 
         button.disabled =
           false;
 
+
         button.textContent =
           "Simpan draft";
+
       }
+
     };
 }
 
-/* =========================
+
+/* =========================================================
    DEPLOY
-========================= */
+========================================================= */
 
 if ($("deployBtn")) {
 
@@ -976,16 +1371,20 @@ if ($("deployBtn")) {
       const button =
         $("deployBtn");
 
+
       try {
 
         button.disabled =
           true;
 
+
         button.textContent =
           "Deploy...";
 
+
         const p =
           state.current;
+
 
         if (!p) {
 
@@ -994,14 +1393,17 @@ if ($("deployBtn")) {
           );
         }
 
+
         const title =
           $("projectTitle")
             .value
             .trim();
 
+
         const html =
           $("htmlCode")
             .value;
+
 
         if (!html.trim()) {
 
@@ -1009,6 +1411,7 @@ if ($("deployBtn")) {
             "HTML masih kosong."
           );
         }
+
 
         const r =
           await apiAuth(
@@ -1025,6 +1428,7 @@ if ($("deployBtn")) {
             }
           );
 
+
         if (!r.project) {
 
           throw new Error(
@@ -1032,12 +1436,15 @@ if ($("deployBtn")) {
           );
         }
 
+
         replaceProject(
           r.project
         );
 
+
         state.current =
           r.project;
+
 
         if ($("copyBtn")) {
 
@@ -1047,11 +1454,12 @@ if ($("deployBtn")) {
             );
         }
 
+
         if ($("deployResult")) {
 
-          $("deployResult")
-            .innerHTML =
+          $("deployResult").innerHTML =
             `
+
             <div class="msg success">
 
               Live:
@@ -1068,8 +1476,10 @@ if ($("deployBtn")) {
               </a>
 
             </div>
+
             `;
         }
+
 
       } catch (error) {
 
@@ -1078,26 +1488,32 @@ if ($("deployBtn")) {
           error
         );
 
+
         msg(
           $("deployResult"),
           error.message,
           "error"
         );
 
+
       } finally {
 
         button.disabled =
           false;
 
+
         button.textContent =
           "Deploy karya ↗";
+
       }
+
     };
 }
 
-/* =========================
+
+/* =========================================================
    PROJECT STATE
-========================= */
+========================================================= */
 
 function replaceProject(p) {
 
@@ -1108,14 +1524,19 @@ function replaceProject(p) {
         Number(p.slot)
     );
 
-  state.projects.push(p);
+
+  state.projects.push(
+    p
+  );
+
 
   renderDashboard();
 }
 
-/* =========================
+
+/* =========================================================
    COPY DEPLOY LINK
-========================= */
+========================================================= */
 
 window.copyDeploy =
   async slot => {
@@ -1127,21 +1548,31 @@ window.copyDeploy =
           Number(slot)
       );
 
-    if (!p?.deployId) return;
+
+    if (!p?.deployId) {
+
+      return;
+    }
+
 
     const url =
       deployUrl(
         p.deployId
       );
 
+
     try {
 
       await navigator.clipboard
-        .writeText(url);
+        .writeText(
+          url
+        );
+
 
       alert(
         "Link deploy berhasil disalin"
       );
+
 
     } catch (error) {
 
@@ -1149,8 +1580,11 @@ window.copyDeploy =
         "Salin link:",
         url
       );
+
     }
+
   };
+
 
 function deployUrl(id) {
 
@@ -1158,9 +1592,17 @@ function deployUrl(id) {
     window.location.origin +
     window.location.pathname +
     "?p=" +
-    encodeURIComponent(id)
+    encodeURIComponent(
+      id
+    )
   );
+
 }
+
+
+/* =========================================================
+   COPY BUTTON DI EDITOR
+========================================================= */
 
 if ($("copyBtn")) {
 
@@ -1170,47 +1612,65 @@ if ($("copyBtn")) {
       const p =
         state.current;
 
-      if (!p?.deployId)
+
+      if (!p?.deployId) {
+
         return;
+      }
+
+
+      const url =
+        deployUrl(
+          p.deployId
+        );
+
 
       navigator.clipboard
         .writeText(
-          deployUrl(
-            p.deployId
-          )
+          url
         )
+
+
         .then(
           () => {
 
             if ($("deployResult")) {
 
-              $("deployResult")
-                .innerHTML =
+              $("deployResult").innerHTML =
                 `
+
                 <div class="msg success">
+
                   Link disalin.
+
                 </div>
+
                 `;
             }
+
           }
         )
+
+
         .catch(
           () => {
 
             prompt(
               "Salin link:",
-              deployUrl(
-                p.deployId
-              )
+              url
             );
+
           }
         );
+
     };
+
 }
 
-/* =========================
+
+/* =========================================================
    ADMIN
-========================= */
+========================================================= */
 
 if ($("adminBtn")) {
 
@@ -1218,12 +1678,16 @@ if ($("adminBtn")) {
     loadAdmin;
 }
 
+
 if ($("backDash")) {
 
   $("backDash").onclick =
     () =>
-      show("dashboardView");
+      show(
+        "dashboardView"
+      );
 }
+
 
 async function loadAdmin() {
 
@@ -1234,10 +1698,14 @@ async function loadAdmin() {
         "adminUsers"
       );
 
+
     const users =
-      Array.isArray(r.users)
+      Array.isArray(
+        r.users
+      )
         ? r.users
         : [];
+
 
     const pending =
       users.filter(
@@ -1246,12 +1714,14 @@ async function loadAdmin() {
           "PENDING"
       );
 
+
     if ($("pendingCount")) {
 
       $("pendingCount")
         .textContent =
         pending.length;
     }
+
 
     if ($("userCount")) {
 
@@ -1260,35 +1730,45 @@ async function loadAdmin() {
         users.length;
     }
 
+
     if ($("pendingUsers")) {
 
       $("pendingUsers")
         .innerHTML =
+
         pending
           .map(
-            x =>
-              `
+            x => `
+
               <div class="user-row">
 
                 <div>
 
                   <b>
+
                     ${escapeHtml(
                       x.name
                     )}
+
                   </b>
 
+
                   <small>
+
                     ${escapeHtml(
                       x.username
                     )}
+
                     ·
+
                     ${escapeHtml(
                       x.email
                     )}
+
                   </small>
 
                 </div>
+
 
                 <button
                   onclick="approveUser('${escapeHtml(
@@ -1300,30 +1780,38 @@ async function loadAdmin() {
                 </button>
 
               </div>
-              `
+
+            `
           )
-          .join("") ||
+          .join("")
+
+
+        ||
 
         `
-        <div
-          style="
-            padding:22px;
-            color:#999;
-            font-size:12px
-          ">
 
-          Tidak ada pendaftaran
-          yang menunggu.
+          <div
+            style="
+              padding:22px;
+              color:#999;
+              font-size:12px
+            ">
 
-        </div>
+            Tidak ada pendaftaran
+            yang menunggu.
+
+          </div>
+
         `;
+
     }
+
 
     if ($("allUsers")) {
 
-      $("allUsers")
-        .innerHTML =
+      $("allUsers").innerHTML =
         `
+
         <div class="table-wrap">
 
           <table class="table">
@@ -1348,39 +1836,52 @@ async function loadAdmin() {
 
             </tr>
 
+
             ${
               users
                 .map(
-                  x =>
-                    `
+                  x => `
+
                     <tr>
 
                       <td>
+
                         ${escapeHtml(
                           x.username
                         )}
+
                       </td>
 
+
                       <td>
+
                         ${escapeHtml(
                           x.name
                         )}
+
                       </td>
 
+
                       <td>
+
                         ${escapeHtml(
                           x.status
                         )}
+
                       </td>
 
+
                       <td>
+
                         ${escapeHtml(
                           x.role
                         )}
+
                       </td>
 
                     </tr>
-                    `
+
+                  `
                 )
                 .join("")
             }
@@ -1388,10 +1889,15 @@ async function loadAdmin() {
           </table>
 
         </div>
+
         `;
     }
 
-    show("adminView");
+
+    show(
+      "adminView"
+    );
+
 
   } catch (error) {
 
@@ -1400,6 +1906,7 @@ async function loadAdmin() {
       error
     );
 
+
     msg(
       $("adminMsg"),
       error.message,
@@ -1407,6 +1914,7 @@ async function loadAdmin() {
     );
   }
 }
+
 
 window.approveUser =
   async id => {
@@ -1421,7 +1929,9 @@ window.approveUser =
         }
       );
 
+
       await loadAdmin();
+
 
     } catch (error) {
 
@@ -1430,17 +1940,21 @@ window.approveUser =
         error
       );
 
+
       msg(
         $("adminMsg"),
         error.message,
         "error"
       );
+
     }
+
   };
 
-/* =========================
+
+/* =========================================================
    PUBLIC DEPLOY PAGE
-========================= */
+========================================================= */
 
 (async () => {
 
@@ -1448,6 +1962,13 @@ window.approveUser =
     new URLSearchParams(
       location.search
     ).get("p");
+
+
+  /*
+   * Jika URL memiliki ?p=...
+   * maka halaman dianggap sebagai
+   * halaman karya publik.
+   */
 
   if (publicId) {
 
@@ -1462,35 +1983,38 @@ window.approveUser =
           }
         );
 
+
       /*
-       * PENTING:
+       * JANGAN menggunakan:
        *
-       * Jangan menggunakan:
+       * document.body.innerHTML = r.html
        *
-       * document.body.innerHTML = r.html;
-       *
-       * karena HTML game dapat memiliki:
+       * karena game dapat mempunyai:
        *
        * <!DOCTYPE html>
        * <html>
        * <head>
        * <style>
        * <script>
-       * dan <body>
+       * <body>
        *
-       * Kita memuatnya sebagai dokumen HTML
-       * lengkap.
+       * Kita harus memuat HTML
+       * sebagai dokumen lengkap.
        */
 
       document.open();
+
 
       document.write(
         r.html
       );
 
+
       document.close();
 
+
       return;
+
 
     } catch (error) {
 
@@ -1499,8 +2023,10 @@ window.approveUser =
         error
       );
 
+
       document.body.innerHTML =
         `
+
         <div
           style="
             font-family:Arial;
@@ -1512,17 +2038,27 @@ window.approveUser =
             Karya tidak ditemukan
           </h2>
 
+
           <p>
             Link deploy mungkin
             sudah tidak tersedia.
           </p>
 
         </div>
+
         `;
+
 
       return;
     }
+
   }
+
+
+  /*
+   * Jika bukan halaman public,
+   * tampilkan dashboard atau login.
+   */
 
   if (token()) {
 
@@ -1530,7 +2066,10 @@ window.approveUser =
 
   } else {
 
-    show("loginView");
+    show(
+      "loginView"
+    );
+
   }
 
 })();
