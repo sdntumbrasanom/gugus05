@@ -581,13 +581,13 @@ function renderDashboard() {
             </button>
 
             <button
-              class="preview"
-              onclick="previewProject(${i})">
+  type="button"
+  class="preview"
+  data-preview-slot="${i}">
 
-              Preview
+  Preview
 
-            </button>
-
+</button>
             ${
               p.deployId
                 ? `
