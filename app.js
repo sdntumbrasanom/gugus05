@@ -1601,18 +1601,16 @@ window.copyDeploy =
 
 
 function deployUrl(id) {
-  // Link deploy langsung ke Apps Script sebagai dokumen HTML,
-  // sehingga tidak perlu memuat shell GitHub Pages terlebih dahulu.
-  if (typeof API_URL !== "undefined" && API_URL) {
-    return API_URL + "?action=publicHtml&deployId=" + encodeURIComponent(id);
-  }
+  // Link publik menggunakan alamat GitHub Pages sendiri:
+  // https://sdntumbrasanom.github.io/gugus05/?p=xxxx
+  // sehingga link lebih pendek dan tetap satu domain dengan aplikasi.
+  const base = (typeof PUBLIC_BASE_URL !== "undefined" && PUBLIC_BASE_URL)
+    ? PUBLIC_BASE_URL
+    : (window.location.origin + window.location.pathname);
 
-  return (
-    window.location.origin +
-    window.location.pathname +
+  return base.replace(/\?$/, "") +
     "?p=" +
-    encodeURIComponent(id)
-  );
+    encodeURIComponent(id);
 }
 
 
